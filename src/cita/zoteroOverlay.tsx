@@ -351,7 +351,11 @@ class ZoteroOverlay {
 				),
 			);
 			if (!confirmed) return;
-			items.forEach((item) => item.deleteCitations());
+			await Zotero.DB.executeTransaction(async function () {
+				for (const item of items) {
+					await item.deleteCitations();
+				}
+			});
 		}
 	}
 
