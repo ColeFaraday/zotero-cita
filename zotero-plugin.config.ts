@@ -111,7 +111,7 @@ export default defineConfig({
 				// add .label tags for preferences localisation
 				replaceInFileSync({
 					files: localePath + "/**/*.ftl",
-					from: /wikicite_prefs_citation-storage-(note|extra)=/g,
+					from: /wikicite_prefs_citation-storage-(note|extra|none)=/g,
 					to: "$&\n    .label=",
 				});
 				// add .label tag for citation pane label

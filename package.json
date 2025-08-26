@@ -3,7 +3,7 @@
 	"version": "1.0.0-beta.12",
 	"description": "Cita: a Wikidata addon for Zotero",
 	"config": {
-		"addonName": "Zotero Cita",
+		"addonName": "Zotero Cita Cole",
 		"addonID": "zotero-wikicite@wikidata.org",
 		"addonRef": "zotero-wikicite",
 		"addonInstance": "ZoteroCita",

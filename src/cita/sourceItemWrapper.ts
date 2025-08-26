@@ -27,13 +27,13 @@ class SourceItemWrapper extends ItemWrapper {
 	newRelations: any;
 	_citations: Citation[];
 	_batch: boolean;
-	_storage: "extra" | "note";
+	_storage: "extra" | "note" | "none";
 	// When I thought of this originally, I wasn't giving the source item to the citation creator
 	// but then I understood it made sense I passed some reference to the source object
 	// given that the citation is a link between two objects (according to the OC model)
 	// so check if any methods here make sense to be moved to the Citation class instead
 
-	constructor(item: Zotero.Item, storage: "extra" | "note") {
+	constructor(item: Zotero.Item, storage: "extra" | "note" | "none") {
 		super(item, item.saveTx.bind(item));
 		this._citations = [];
 		this._batch = false;
@@ -65,8 +65,39 @@ class SourceItemWrapper extends ItemWrapper {
 	}
 
 	async setCitations(citations: Citation[]) {
-		// fix performance was undefined, only accessible when building for node
-		// const t0 = performance.now();
+		if (this._storage === "none") {
+			// Prompt to delete all citation notes
+			const promptService = Services.prompt;
+			const windowRef = window as mozIDOMWindowProxy;
+			const title = "Delete Citation Notes?";
+			const message =
+				"Do you want to delete all citation notes (Citations000, Citations001, etc.) for this item?";
+			const flags =
+				promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_YES +
+				promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_NO;
+			const result = promptService.confirmEx(
+				windowRef,
+				title,
+				message,
+				flags,
+				"",
+				"",
+				"",
+				"",
+				{ value: false },
+			);
+			if (result === 0) {
+				// Yes selected
+				const citationNotes = Wikicite.getCitationsNotes(this.item);
+				await Zotero.DB.executeTransaction(async function () {
+					for (const note of citationNotes) {
+						await note.erase();
+					}
+				});
+			}
+			this._citations = citations;
+			return;
+		}
 		if (this._storage === "extra") {
 			const jsonCitations = citations.map((citation) => {
 				let json = JSON.stringify(

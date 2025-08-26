@@ -485,6 +485,9 @@ class ZoteroOverlay {
 		this.pidPane();
 
 		this.addOverlayStyleSheet();
+
+		// Add menu item to trigger deletion from the File menu
+		this.addDeleteCitationNotesMenu(doc);
 	}
 
 	removeOverlay() {
@@ -1354,6 +1357,52 @@ class ZoteroOverlay {
 			},
 		};
 		return menuOptions;
+	}
+
+	/**
+	 * Delete all notes matching Citations### (e.g., Citations000, Citations001, ...)
+	 */
+	async deleteAllCitationNotes() {
+		const notes = (
+			await Zotero.Items.getAll(Zotero.Libraries.userLibraryID)
+		).filter((item: any) => item.isNote());
+		const citationNoteRegex = /^Citations\d{3,}$/;
+		const citationNotes = notes.filter((note: any) =>
+			citationNoteRegex.test(note.getNoteTitle()),
+		);
+		await Zotero.DB.executeTransaction(async function () {
+			for (const note of citationNotes) {
+				note.deleted = true;
+				await note.saveTx();
+			}
+		});
+		console.log(
+			`[Wikicite] Deleted ${citationNotes.length} citation notes.`,
+		);
+	}
+
+	addDeleteCitationNotesMenu(doc: Document) {
+		const fileMenu = doc.getElementById("menu_File");
+		if (!fileMenu) return;
+		const menuItem = doc.createXULElement("menuitem");
+		menuItem.setAttribute("id", "menu-delete-citation-notes");
+		menuItem.setAttribute("label", "Delete all citation notes");
+		menuItem.addEventListener("command", async () => {
+			const confirmed = Services.prompt.confirm(
+				window as mozIDOMWindowProxy,
+				"Delete Citation Notes",
+				"Are you sure you want to delete all Citations### notes? This cannot be undone.",
+			);
+			if (confirmed) {
+				await this.deleteAllCitationNotes();
+				Services.prompt.alert(
+					window as mozIDOMWindowProxy,
+					"Delete Citation Notes",
+					"All Citations### notes have been deleted.",
+				);
+			}
+		});
+		fileMenu.appendChild(menuItem);
 	}
 }
 

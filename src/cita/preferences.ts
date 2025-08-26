@@ -3,16 +3,20 @@ import Progress from "./progress";
 import SourceItemWrapper from "./sourceItemWrapper";
 import Wikicite, { debug } from "./wikicite";
 
-export declare type StorageType = "extra" | "note";
+export declare type StorageType = "extra" | "note" | "none";
 export const STORAGE_PREF_KEY = "storage";
 export function getStorage() {
-	return getPref(STORAGE_PREF_KEY) as StorageType;
+	const value = getPref(STORAGE_PREF_KEY);
+	console.log("[Wikicite] getStorage:", value);
+	return value as StorageType;
 }
 export function setStorage(value: StorageType) {
+	console.log("[Wikicite] setStorage:", value);
 	setPref(STORAGE_PREF_KEY, value);
 }
 export function initialiseStorage() {
-	initialiseDefaultPref(STORAGE_PREF_KEY, "note");
+	console.log("[Wikicite] initialiseStorage: default = none");
+	initialiseDefaultPref(STORAGE_PREF_KEY, "none");
 }
 
 export declare type SortByType = "ordinal" | "authors" | "title" | "date";
